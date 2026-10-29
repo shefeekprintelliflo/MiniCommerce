@@ -2,19 +2,20 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Microservice.identity.Models;
-using Microsoft.Extensions.Configuration;
+using Microservice.identity.Options;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Microservice.identity.Services;
 
 // Issues short-lived access tokens. Refresh tokens are a later step.
-public class TokenService(IConfiguration configuration)
+public class TokenService(IOptions<JwtOptions> jwtOptions)
 {
     private static readonly TimeSpan Lifetime = TimeSpan.FromMinutes(15);
 
     public AuthResponse CreateAccessToken(AppUser user)
     {
-        var jwt = configuration.GetSection("Jwt");
+        var jwt = jwtOptions.Value;
         var expires = DateTime.UtcNow.Add(Lifetime);
 
         var claims = new[]
@@ -24,10 +25,10 @@ public class TokenService(IConfiguration configuration)
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
 
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt["SigningKey"]!));
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.SigningKey));
         var token = new JwtSecurityToken(
-            issuer: jwt["Issuer"],
-            audience: jwt["Audience"],
+            issuer: jwt.Issuer,
+            audience: jwt.Audience,
             claims: claims,
             expires: expires,
             signingCredentials: new SigningCredentials(key, SecurityAlgorithms.HmacSha256));

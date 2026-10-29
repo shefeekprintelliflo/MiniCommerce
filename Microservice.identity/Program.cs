@@ -2,11 +2,13 @@ using System.Text;
 using Microservice.identity.Data;
 using Microservice.identity.Endpoints;
 using Microservice.identity.Models;
+using Microservice.identity.Options;
 using Microservice.identity.Repositories;
 using Microservice.identity.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -25,24 +27,33 @@ builder.Services.Configure<IdentityOptions>(options =>
 builder.Services.AddScoped<IPasswordHasher<AppUser>, PasswordHasher<AppUser>>();
 builder.Services.AddSingleton<ILookupNormalizer, UpperInvariantLookupNormalizer>();
 
+builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddSingleton<PasswordPolicy>();
 
-var jwt = builder.Configuration.GetSection("Jwt");
-var signingKey = jwt["SigningKey"] ?? throw new InvalidOperationException("Missing Jwt:SigningKey.");
+// Binds Jwt:* to JwtOptions and fails at startup if any required value is missing.
+builder.Services.AddOptions<JwtOptions>()
+    .BindConfiguration(JwtOptions.SectionName)
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
+    .AddJwtBearer();
+
+builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
+    .Configure<IOptions<JwtOptions>>((bearer, jwtOptions) =>
     {
-        options.TokenValidationParameters = new TokenValidationParameters
+        var jwt = jwtOptions.Value;
+
+        bearer.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
-            ValidIssuer = jwt["Issuer"],
+            ValidIssuer = jwt.Issuer,
             ValidateAudience = true,
-            ValidAudience = jwt["Audience"],
+            ValidAudience = jwt.Audience,
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signingKey)),
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.SigningKey)),
             ValidateLifetime = true,
             ClockSkew = TimeSpan.FromSeconds(30)
         };

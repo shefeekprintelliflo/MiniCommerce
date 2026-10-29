@@ -40,6 +40,7 @@ public static class AuthEndpoints
         group.MapPost("/login", async (
             LoginRequest request,
             IUserRepository users,
+            IRepository<AuditLog> auditLogs,
             IPasswordHasher<AppUser> hasher,
             TokenService tokens) =>
         {
@@ -51,6 +52,15 @@ public static class AuthEndpoints
             {
                 return Results.Problem(statusCode: StatusCodes.Status401Unauthorized, title: "Invalid email or password.");
             }
+
+            // AuditLog.UserId is a required foreign key, so only successful logins can be recorded here.
+            await auditLogs.AddAsync(new AuditLog
+            {
+                UserId = user.Id,
+                Action = "Login",
+                Details = $"Signed in as {user.Email}.",
+                CreatedAt = DateTime.UtcNow
+            });
 
             return Results.Ok(tokens.CreateAccessToken(user));
         });
