@@ -2,25 +2,22 @@
   <p-card styleClass="auth-card">
     <h1 class="auth-title">Create account</h1>
 
-    @if (registeredEmail(); as email) {
-      <p-message severity="success" variant="simple" size="small">
-        Account created for {{ email }}. <a routerLink="/login">Sign in</a>
-      </p-message>
-    }
+    <p-message *ngIf="registeredEmail() as email" severity="success" variant="simple" size="small">
+      Account created for {{ email }}. <a routerLink="/login">Sign in</a>
+    </p-message>
 
-    @for (error of errors(); track error) {
-      <p-message severity="error" variant="simple" size="small">{{ error }}</p-message>
-    }
+    <p-message *ngFor="let error of errors()" severity="error" variant="simple" size="small">{{ error }}</p-message>
 
     <form [formGroup]="form" (ngSubmit)="submit()" class="auth-form" novalidate>
       <div class="field">
         <label for="email">Email</label>
         <input pInputText id="email" type="email" formControlName="email" autocomplete="email" />
-        @if (form.controls.email.touched && form.controls.email.hasError('required')) {
-          <small class="field-error">Email is required.</small>
-        } @else if (form.controls.email.touched && form.controls.email.hasError('email')) {
-          <small class="field-error">Enter a valid email address.</small>
-        }
+        <small
+          *ngIf="form.controls.email.touched && form.controls.email.hasError('required')"
+          class="field-error">Email is required.</small>
+        <small
+          *ngIf="form.controls.email.touched && !form.controls.email.hasError('required') && form.controls.email.hasError('email')"
+          class="field-error">Enter a valid email address.</small>
       </div>
 
       <div class="field">
@@ -35,27 +32,16 @@
             <p class="hint">At least 8 characters, with a digit, a lowercase letter, an uppercase letter and a symbol.</p>
           </ng-template>
         </p-password>
-        @if (form.controls.password.touched) {
-          @if (form.controls.password.hasError('required')) {
-            <small class="field-error">Password is required.</small>
-          } @else {
-            @if (form.controls.password.hasError('tooShort')) {
-              <small class="field-error">Use at least 8 characters.</small>
-            }
-            @if (form.controls.password.hasError('noDigit')) {
-              <small class="field-error">Add a digit.</small>
-            }
-            @if (form.controls.password.hasError('noLower')) {
-              <small class="field-error">Add a lowercase letter.</small>
-            }
-            @if (form.controls.password.hasError('noUpper')) {
-              <small class="field-error">Add an uppercase letter.</small>
-            }
-            @if (form.controls.password.hasError('noSymbol')) {
-              <small class="field-error">Add a symbol such as ! or #.</small>
-            }
-          }
-        }
+        <ng-container *ngIf="form.controls.password.touched">
+          <small *ngIf="form.controls.password.hasError('required')" class="field-error">Password is required.</small>
+          <ng-container *ngIf="!form.controls.password.hasError('required')">
+            <small *ngIf="form.controls.password.hasError('tooShort')" class="field-error">Use at least 8 characters.</small>
+            <small *ngIf="form.controls.password.hasError('noDigit')" class="field-error">Add a digit.</small>
+            <small *ngIf="form.controls.password.hasError('noLower')" class="field-error">Add a lowercase letter.</small>
+            <small *ngIf="form.controls.password.hasError('noUpper')" class="field-error">Add an uppercase letter.</small>
+            <small *ngIf="form.controls.password.hasError('noSymbol')" class="field-error">Add a symbol such as ! or #.</small>
+          </ng-container>
+        </ng-container>
       </div>
 
       <div class="field">
@@ -67,11 +53,12 @@
           [toggleMask]="true"
           [fluid]="true"
           autocomplete="new-password" />
-        @if (form.controls.confirmPassword.touched && form.controls.confirmPassword.hasError('required')) {
-          <small class="field-error">Please confirm your password.</small>
-        } @else if (form.touched && form.hasError('mismatch')) {
-          <small class="field-error">Passwords do not match.</small>
-        }
+        <small
+          *ngIf="form.controls.confirmPassword.touched && form.controls.confirmPassword.hasError('required')"
+          class="field-error">Please confirm your password.</small>
+        <small
+          *ngIf="form.touched && form.hasError('mismatch') && !(form.controls.confirmPassword.touched && form.controls.confirmPassword.hasError('required'))"
+          class="field-error">Passwords do not match.</small>
       </div>
 
       <p-button

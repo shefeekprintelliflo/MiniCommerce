@@ -12,18 +12,22 @@ namespace Microservice.identity.Services;
 public class TokenService(IOptions<JwtOptions> jwtOptions)
 {
     private static readonly TimeSpan Lifetime = TimeSpan.FromMinutes(15);
+    private const string RoleClaimType = "role";
 
-    public AuthResponse CreateAccessToken(AppUser user)
+    public AuthResponse CreateAccessToken(AppUser user, IEnumerable<string> roles)
     {
         var jwt = jwtOptions.Value;
         var expires = DateTime.UtcNow.Add(Lifetime);
 
-        var claims = new[]
+        var claims = new List<Claim>
         {
-            new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-            new Claim(JwtRegisteredClaimNames.Email, user.Email ?? string.Empty),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+            new(JwtRegisteredClaimNames.Email, user.Email ?? string.Empty),
+            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
+
+        // One "role" claim per role. The bearer middleware maps these to ClaimTypes.Role for policies and [Authorize(Roles)].
+        claims.AddRange(roles.Select(role => new Claim(RoleClaimType, role)));
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.SigningKey));
         var token = new JwtSecurityToken(

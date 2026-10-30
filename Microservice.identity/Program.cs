@@ -1,4 +1,5 @@
 using System.Text;
+using Azure.Identity;
 using Microservice.identity.Data;
 using Microservice.identity.Endpoints;
 using Microservice.identity.Models;
@@ -12,6 +13,15 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Loads secrets (such as ConnectionStrings--IdentityDb) from Azure Key Vault when KeyVault:Uri is set.
+// Locally, DefaultAzureCredential uses your Azure CLI or Visual Studio login.
+// In Azure, it uses the app's managed identity. Leave KeyVault:Uri empty to skip Key Vault.
+var keyVaultUri = builder.Configuration["KeyVault:Uri"];
+if (!string.IsNullOrWhiteSpace(keyVaultUri))
+{
+    builder.Configuration.AddAzureKeyVault(new Uri(keyVaultUri), new DefaultAzureCredential());
+}
 
 builder.Services.AddDbContext<IdentityDb>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("IdentityDb")
@@ -29,6 +39,8 @@ builder.Services.AddSingleton<ILookupNormalizer, UpperInvariantLookupNormalizer>
 
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IRoleRepository, RoleRepository>();
+builder.Services.AddScoped<RoleSeeder>();
 builder.Services.AddSingleton<PasswordPolicy>();
 
 // Binds Jwt:* to JwtOptions and fails at startup if any required value is missing.
@@ -58,7 +70,10 @@ builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationSc
             ClockSkew = TimeSpan.FromSeconds(30)
         };
     });
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy(AuthPolicies.AdminOnly, policy => policy.RequireRole(AppRoles.Admin));
+});
 
 builder.Services.AddSingleton<TokenService>();
 builder.Services.AddHealthChecks().AddDbContextCheck<IdentityDb>("sql");
@@ -69,8 +84,14 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapAuthEndpoints();
+app.MapAdminEndpoints();
 app.MapHealthChecks("/health/ready");
 app.MapGet("/health/live", () => Results.Ok(new { status = "alive" }));
+
+using (var scope = app.Services.CreateScope())
+{
+    await scope.ServiceProvider.GetRequiredService<RoleSeeder>().SeedAsync();
+}
 
 app.Run();
 

@@ -14,6 +14,7 @@ public static class AuthEndpoints
         group.MapPost("/register", async (
             RegisterRequest request,
             IUserRepository users,
+            IRoleRepository roles,
             IPasswordHasher<AppUser> hasher,
             PasswordPolicy passwordPolicy) =>
         {
@@ -30,9 +31,14 @@ public static class AuthEndpoints
                     errors.ToDictionary(e => e.Code, e => new[] { e.Description }));
             }
 
+            // Fetch the default role first so a missing role fails before the user row is written.
+            var customerRole = await roles.FindByNameAsync(AppRoles.Customer)
+                ?? throw new InvalidOperationException($"Role '{AppRoles.Customer}' has not been seeded.");
+
             var user = new AppUser { UserName = request.Email, Email = request.Email };
             user.PasswordHash = hasher.HashPassword(user, request.Password);
             await users.AddAsync(user);
+            await roles.AddToRoleAsync(user.Id, customerRole.Id);
 
             return Results.Created($"/api/users/{user.Id}", new { user.Id, user.Email });
         });
@@ -40,6 +46,7 @@ public static class AuthEndpoints
         group.MapPost("/login", async (
             LoginRequest request,
             IUserRepository users,
+            IRoleRepository roles,
             IRepository<AuditLog> auditLogs,
             IPasswordHasher<AppUser> hasher,
             TokenService tokens) =>
@@ -62,7 +69,8 @@ public static class AuthEndpoints
                 CreatedAt = DateTime.UtcNow
             });
 
-            return Results.Ok(tokens.CreateAccessToken(user));
+            var roleNames = await roles.GetUserRoleNamesAsync(user.Id);
+            return Results.Ok(tokens.CreateAccessToken(user, roleNames));
         });
 
         return app;
