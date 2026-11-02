@@ -1,0 +1,35 @@
+.product-name {
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.product-description {
+  margin: 0 0 0.75rem;
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.product-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.product-price {
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.product-stock {
+  font-size: 0.85rem;
+}
+
+.in-stock {
+  color: #15803d;
+}
+
+.out-of-stock {
+  color: #b91c1c;
+}

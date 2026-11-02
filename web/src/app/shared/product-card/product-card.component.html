@@ -1,0 +1,12 @@
+<p-card styleClass="product-card">
+  <h2 class="product-name">{{ product().name }}</h2>
+
+  <p *ngIf="product().description" class="product-description">{{ product().description }}</p>
+
+  <div class="product-meta">
+    <span class="product-price">{{ product().price | number: '1.2-2' }}</span>
+    <span class="product-stock" [class.in-stock]="product().stockQuantity > 0" [class.out-of-stock]="product().stockQuantity <= 0">
+      {{ product().stockQuantity > 0 ? 'In stock' : 'Out of stock' }}
+    </span>
+  </div>
+</p-card>

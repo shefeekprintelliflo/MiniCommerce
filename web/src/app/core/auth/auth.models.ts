@@ -18,4 +18,11 @@ export interface LoginRequest {
 export interface AuthResponse {
   accessToken: string;
   expiresAtUtc: string;
+  refreshToken: string;
+  refreshTokenExpiresAtUtc: string;
+}
+
+// Used by both /refresh and /logout.
+export interface RefreshRequest {
+  refreshToken: string;
 }

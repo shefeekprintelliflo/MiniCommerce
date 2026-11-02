@@ -1,0 +1,25 @@
+.home-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1.5rem 16px;
+  box-sizing: border-box;
+}
+
+.home-message {
+  color: #64748b;
+}
+
+.home-message a {
+  color: inherit;
+  font-weight: 500;
+}
+
+.home-error {
+  color: var(--p-red-600, #dc2626);
+}
+
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1rem;
+}

@@ -70,9 +70,65 @@ public static class AuthEndpoints
             });
 
             var roleNames = await roles.GetUserRoleNamesAsync(user.Id);
-            return Results.Ok(tokens.CreateAccessToken(user, roleNames));
+            return Results.Ok(await tokens.IssueAsync(user, roleNames));
+        });
+
+        // Rotates the refresh token: the presented one is revoked and a new pair is issued.
+        group.MapPost("/refresh", async (
+            RefreshRequest request,
+            IUserRepository users,
+            IRoleRepository roles,
+            IRefreshTokenRepository refreshTokens,
+            TokenService tokens) =>
+        {
+            var stored = await refreshTokens.FindByHashAsync(TokenService.HashRefreshToken(request.RefreshToken));
+            if (stored is null || stored.ExpiresAtUtc <= DateTime.UtcNow)
+            {
+                return InvalidRefresh();
+            }
+
+            // A revoked token being presented again means it was copied or stolen. Revoke every session for that user.
+            if (stored.RevokedAtUtc is not null)
+            {
+                await refreshTokens.RevokeAllForUserAsync(stored.UserId);
+                return InvalidRefresh();
+            }
+
+            // Only one concurrent caller can flip the token, so the losing caller is treated as reuse.
+            if (!await refreshTokens.TryRevokeAsync(stored.Id))
+            {
+                await refreshTokens.RevokeAllForUserAsync(stored.UserId);
+                return InvalidRefresh();
+            }
+
+            var user = await users.FirstOrDefaultAsync(u => u.Id == stored.UserId);
+            if (user is null)
+            {
+                return InvalidRefresh();
+            }
+
+            var roleNames = await roles.GetUserRoleNamesAsync(user.Id);
+            return Results.Ok(await tokens.IssueAsync(user, roleNames));
+        });
+
+        // Revokes the presented refresh token. Always returns 204 so the response does not reveal whether a token was valid.
+        group.MapPost("/logout", async (
+            RefreshRequest request,
+            IRefreshTokenRepository refreshTokens) =>
+        {
+            var stored = await refreshTokens.FindByHashAsync(TokenService.HashRefreshToken(request.RefreshToken));
+            if (stored is not null)
+            {
+                await refreshTokens.TryRevokeAsync(stored.Id);
+            }
+
+            return Results.NoContent();
         });
 
         return app;
     }
+
+    // One generic 401 for every refresh failure, so callers cannot tell expired, unknown and reused tokens apart.
+    private static IResult InvalidRefresh() =>
+        Results.Problem(statusCode: StatusCodes.Status401Unauthorized, title: "Invalid or expired refresh token.");
 }

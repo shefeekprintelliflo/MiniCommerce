@@ -40,6 +40,7 @@ builder.Services.AddSingleton<ILookupNormalizer, UpperInvariantLookupNormalizer>
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
+builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 builder.Services.AddScoped<RoleSeeder>();
 builder.Services.AddSingleton<PasswordPolicy>();
 
@@ -75,7 +76,8 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy(AuthPolicies.AdminOnly, policy => policy.RequireRole(AppRoles.Admin));
 });
 
-builder.Services.AddSingleton<TokenService>();
+// Scoped because it depends on the scoped refresh-token repository (and therefore on the DbContext).
+builder.Services.AddScoped<TokenService>();
 builder.Services.AddHealthChecks().AddDbContextCheck<IdentityDb>("sql");
 
 var app = builder.Build();

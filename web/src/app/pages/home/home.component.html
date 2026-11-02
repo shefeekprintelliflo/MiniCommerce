@@ -1,1 +1,17 @@
-<p>home works!</p>
+<app-header />
+
+<main class="home-page">
+  <p *ngIf="!signedIn()" class="home-message">
+    <a routerLink="/login">Sign in</a> to browse our products.
+  </p>
+
+  <ng-container *ngIf="signedIn()">
+    <p *ngIf="loading()" class="home-message">Loading products...</p>
+    <p *ngIf="error() as message" class="home-message home-error">{{ message }}</p>
+    <p *ngIf="!loading() && !error() && items().length === 0" class="home-message">No products yet.</p>
+
+    <div class="product-grid">
+      <app-product-card *ngFor="let product of items()" [product]="product" />
+    </div>
+  </ng-container>
+</main>
