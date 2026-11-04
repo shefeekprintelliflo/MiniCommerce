@@ -1,0 +1,14 @@
+.product-detail-page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 1.5rem 16px;
+}
+
+.product-detail-price {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.product-detail-message {
+  color: #475569;
+}

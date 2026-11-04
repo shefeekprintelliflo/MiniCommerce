@@ -1,0 +1,29 @@
+<app-header />
+
+<main class="cart-page">
+  <h1>Your cart</h1>
+
+  hi items in your cart.
+
+  <p *ngIf="cart.lines().length === 0" class="cart-empty">
+    Your cart is empty. <a routerLink="/home">Browse products</a>.
+  </p>
+
+  <ng-container *ngIf="cart.lines().length > 0">
+    <ul class="cart-lines">
+      <li *ngFor="let line of cart.lines()" class="cart-line">
+        <span class="cart-line-name">{{ line.product.name }}</span>
+        <span class="cart-line-qty">× {{ line.quantity }}</span>
+        <span class="cart-line-total">{{ line.product.price * line.quantity | number: '1.2-2' }}</span>
+      </li>
+    </ul>
+
+    <div class="cart-footer">
+      <strong>Total: {{ cart.total() | number: '1.2-2' }}</strong>
+      <button type="button" class="cart-clear" (click)="cart.clear()">Clear cart</button>
+      <a routerLink="/cart/checkout" class="cart-checkout">Checkout</a>
+    </div>
+  </ng-container>
+
+  <router-outlet />
+</main>

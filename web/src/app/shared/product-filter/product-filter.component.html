@@ -1,0 +1,35 @@
+<div class="product-filter">
+  <p-iconfield class="filter-search">
+    <p-inputicon>
+      <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+        <circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2" />
+        <line x1="16.5" y1="16.5" x2="21" y2="21" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+      </svg>
+    </p-inputicon>
+    <input
+      pInputText
+      type="search"
+      placeholder="Search products"
+      aria-label="Search products"
+      #searchInput
+      [value]="value().search"
+      (input)="onSearch(searchInput.value)" />
+  </p-iconfield>
+
+  <label class="filter-stock" for="in-stock">
+    <p-checkbox
+      inputId="in-stock"
+      [binary]="true"
+      [ngModel]="value().inStockOnly"
+      (ngModelChange)="onInStockChange($event)" />
+    In stock only
+  </label>
+  <label class="filter-stock" for="out-of-stock">
+    <p-checkbox
+      inputId="out-of-stock"
+      [binary]="true"
+      [ngModel]="value().outOfStockOnly"
+      (ngModelChange)="onOutOfStockChange($event)" />
+    Out of stock only
+  </label>
+</div>

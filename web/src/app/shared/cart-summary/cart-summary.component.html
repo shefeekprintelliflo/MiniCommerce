@@ -1,0 +1,16 @@
+<section class="cart-summary" *ngIf="itemCount() > 0">
+  <ul class="cart-lines">
+    <li *ngFor="let line of lines()" class="cart-line">
+      <span class="cart-line-name">{{ line.product.name }}</span>
+      <span class="cart-line-qty">× {{ line.quantity }}</span>
+      <span class="cart-line-total">{{ line.product.price * line.quantity | number: '1.2-2' }}</span>
+    </li>
+  </ul>
+  <div class="cart-footer">
+    <span class="cart-text">
+      {{ itemCount() }} {{ itemCount() === 1 ? 'item' : 'items' }} ·
+      <strong>{{ total() | number: '1.2-2' }}</strong>
+    </span>
+    <button type="button" class="cart-clear" (click)="clear.emit()">Clear cart</button>
+  </div>
+</section>

@@ -1,0 +1,22 @@
+<app-header />
+
+<main class="product-detail-page">
+  <p *ngIf="loading()" class="product-detail-message">Loading product...</p>
+
+  <p *ngIf="notFound()" class="product-detail-message">
+    Product not found. <a routerLink="/home">Back to products</a>
+  </p>
+
+  <ng-container *ngIf="product() as p">
+    <h1>{{ p.name }}</h1>
+    <p *ngIf="p.description">{{ p.description }}</p>
+    <p class="product-detail-price">{{ p.price | number: '1.2-2' }}</p>
+    <p>{{ p.stockQuantity > 0 ? 'In stock' : 'Out of stock' }}</p>
+    <p *ngIf="cart.quantityOf(p.id) > 0">{{ cart.quantityOf(p.id) }} in cart</p>
+
+    <button type="button" class="add-to-cart" [disabled]="p.stockQuantity <= 0" (click)="cart.add(p, 1)">
+      Add to cart
+    </button>
+    <p><a routerLink="/home">Back to products</a></p>
+  </ng-container>
+</main>

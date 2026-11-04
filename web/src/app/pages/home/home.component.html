@@ -6,12 +6,28 @@
   </p>
 
   <ng-container *ngIf="signedIn()">
+    <app-product-filter [value]="filters()" (valueChange)="onFiltersChange($event)" />
+
     <p *ngIf="loading()" class="home-message">Loading products...</p>
     <p *ngIf="error() as message" class="home-message home-error">{{ message }}</p>
     <p *ngIf="!loading() && !error() && items().length === 0" class="home-message">No products yet.</p>
+    <p *ngIf="!loading() && !error() && items().length > 0 && visibleItems().length === 0" class="home-message">
+      No products match these filters.
+    </p>
 
     <div class="product-grid">
-      <app-product-card *ngFor="let product of items()" [product]="product" />
+      <app-product-card
+        *ngFor="let product of visibleItems()"
+        [product]="product"
+        [inCart]="cart.quantityOf(product.id)"
+        (addToCart)="onAddToCart($event)"
+        (removeFromCart)="onRemove($event)" />
     </div>
+
+    <app-cart-summary
+      [lines]="cart.lines()"
+      [itemCount]="cart.itemCount()"
+      [total]="cart.total()"
+      (clear)="cart.clear()" />
   </ng-container>
 </main>

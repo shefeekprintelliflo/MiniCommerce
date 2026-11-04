@@ -33,3 +33,33 @@
 .out-of-stock {
   color: #b91c1c;
 }
+
+.product-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.product-in-cart {
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.add-to-cart {
+  margin-left: auto;
+  padding: 0.4rem 0.9rem;
+  border: none;
+  border-radius: 6px;
+  background: #2563eb;
+  color: #fff;
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.add-to-cart:disabled {
+  background: #cbd5e1;
+  cursor: not-allowed;
+}

@@ -1,0 +1,16 @@
+<section class="checkout">
+  <h2>Checkout</h2>
+
+  <p *ngIf="cart.itemCount() === 0" class="checkout-empty">
+    Your cart is empty. <a routerLink="/home">Browse products</a>.
+  </p>
+
+  <ng-container *ngIf="cart.itemCount() > 0">
+    <p class="checkout-summary">
+      {{ cart.itemCount() }} {{ cart.itemCount() === 1 ? 'item' : 'items' }} ·
+      <strong>Total: {{ cart.total() | number: '1.2-2' }}</strong>
+    </p>
+  </ng-container>
+
+  <a routerLink="/cart" class="checkout-back">Back to cart</a>
+</section>

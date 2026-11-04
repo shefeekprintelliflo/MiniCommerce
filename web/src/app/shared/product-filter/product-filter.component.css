@@ -1,0 +1,23 @@
+.product-filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.filter-search {
+  flex: 1 1 240px;
+}
+
+.filter-search input {
+  width: 100%;
+}
+
+.filter-stock {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+}

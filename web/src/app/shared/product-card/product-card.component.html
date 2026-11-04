@@ -3,10 +3,37 @@
 
   <p *ngIf="product().description" class="product-description">{{ product().description }}</p>
 
+  <div>
+    <input
+      #qtyInput
+      type="number"
+      min="1"
+      [value]="quantity()"
+      (input)="onQuantityInput(qtyInput.value)" />
+  </div>
   <div class="product-meta">
     <span class="product-price">{{ product().price | number: '1.2-2' }}</span>
     <span class="product-stock" [class.in-stock]="product().stockQuantity > 0" [class.out-of-stock]="product().stockQuantity <= 0">
       {{ product().stockQuantity > 0 ? 'In stock' : 'Out of stock' }}
     </span>
+  </div>
+
+  <div class="product-actions">
+    <span *ngIf="inCart() > 0" class="product-in-cart">{{ inCart() }} in cart</span>
+    <button
+      type="button"
+      class="add-to-cart"
+      [disabled]="product().stockQuantity <= 0"
+      (click)="onAdd()">
+      Add to cart
+    </button>
+  </div>
+  <div class="product-actions" *ngIf="inCart() > 0">
+    <button
+      type="button"
+      class="add-to-cart"
+      (click)="onRemove()">
+      Remove from cart
+    </button>
   </div>
 </p-card>

@@ -22,4 +22,8 @@ export class HeaderComponent {
 
     this.router.navigateByUrl('/login');
   }
+
+  protected onCartClick(): void {
+    this.router.navigateByUrl('/cart');
+  }
 }

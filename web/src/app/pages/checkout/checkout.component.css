@@ -1,0 +1,10 @@
+.checkout {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.checkout-back {
+  display: inline-block;
+  margin-top: 0.75rem;
+}
