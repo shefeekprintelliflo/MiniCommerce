@@ -4,6 +4,16 @@
     "secure": false,
     "changeOrigin": true
   },
+  "/api/cart": {
+    "target": "http://localhost:60091",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/api/orders": {
+    "target": "http://localhost:60101",
+    "secure": false,
+    "changeOrigin": true
+  },
   "/api": {
     "target": "http://localhost:60071",
     "secure": false,

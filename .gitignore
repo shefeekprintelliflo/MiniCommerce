@@ -7,3 +7,6 @@ obj/
 TestResults/
 appsettings.Development.json
 secrets.json
+
+# Local Docker settings with passwords and keys
+.env

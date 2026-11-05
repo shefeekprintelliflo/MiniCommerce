@@ -1,0 +1,84 @@
+# Runs the whole system: SQL Server, four backend services, and the Angular app behind nginx.
+# Start it with:  docker compose up --build
+# Then open http://localhost:8080
+
+name: minicommerce
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:?Set MSSQL_SA_PASSWORD in .env}
+    volumes:
+      - sqldata:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+  identity:
+    build: ./Microservice.identity
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      Database__MigrateOnStartup: "true"
+      ConnectionStrings__IdentityDb: "Server=sqlserver,1433;Database=MiniCommerce.Identity;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
+      Jwt__SigningKey: ${JWT_SIGNING_KEY:?Set JWT_SIGNING_KEY in .env}
+      Roles__BootstrapAdminEmail: ${BOOTSTRAP_ADMIN_EMAIL:-}
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+
+  products:
+    build: ./Microservice.Products
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      Database__MigrateOnStartup: "true"
+      ConnectionStrings__ProductsDb: "Server=sqlserver,1433;Database=MiniCommerce.Products;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
+      Jwt__SigningKey: ${JWT_SIGNING_KEY:?Set JWT_SIGNING_KEY in .env}
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+
+  cart:
+    build: ./Microservice.Cart
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      Database__MigrateOnStartup: "true"
+      ConnectionStrings__CartDb: "Server=sqlserver,1433;Database=MiniCommerce.Cart;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
+      Jwt__SigningKey: ${JWT_SIGNING_KEY:?Set JWT_SIGNING_KEY in .env}
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+
+  orders:
+    build: ./Microservice.Orders
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      Database__MigrateOnStartup: "true"
+      ConnectionStrings__OrdersDb: "Server=sqlserver,1433;Database=MiniCommerce.Orders;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
+      Jwt__SigningKey: ${JWT_SIGNING_KEY:?Set JWT_SIGNING_KEY in .env}
+      Services__Cart: http://cart:8080
+      Services__Products: http://products:8080
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      cart:
+        condition: service_started
+      products:
+        condition: service_started
+
+  web:
+    build: ./web
+    ports:
+      - "8080:80"
+    depends_on:
+      - identity
+      - products
+      - cart
+      - orders
+
+volumes:
+  sqldata:

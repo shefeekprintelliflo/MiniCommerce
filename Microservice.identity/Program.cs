@@ -92,6 +92,12 @@ app.MapGet("/health/live", () => Results.Ok(new { status = "alive" }));
 
 using (var scope = app.Services.CreateScope())
 {
+    // Creates the database and applies pending migrations. Turned on by docker-compose; off for local runs.
+    if (app.Configuration.GetValue<bool>("Database:MigrateOnStartup"))
+    {
+        await scope.ServiceProvider.GetRequiredService<IdentityDb>().Database.MigrateAsync();
+    }
+
     await scope.ServiceProvider.GetRequiredService<RoleSeeder>().SeedAsync();
 }
 

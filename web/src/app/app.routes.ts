@@ -9,13 +9,12 @@ export const routes: Routes = [
     path: 'cart',
     loadComponent: () => import('./pages/cart/cart.component').then((m) => m.CartComponent),
     canMatch: [authGuard],
-    children: [
-      {
-        path: 'checkout',
-        loadComponent: () => import('./pages/checkout/checkout.component').then((m) => m.CheckoutComponent),
-        canDeactivate: [checkoutLeaveGuard],
-      },
-    ],
+  },
+  {
+    path: 'checkout',
+    loadComponent: () => import('./pages/checkout/checkout.component').then((m) => m.CheckoutComponent),
+    canMatch: [authGuard],
+    canDeactivate: [checkoutLeaveGuard],
   },
   {
     path: 'products/:id',

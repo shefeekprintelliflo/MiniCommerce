@@ -3,7 +3,9 @@
 <main class="cart-page">
   <h1>Your cart</h1>
 
-  hi items in your cart.
+  <p *ngIf="cart.syncError()" class="cart-error" role="alert">
+    Some changes could not be saved. The cart below may not match the server.
+  </p>
 
   <p *ngIf="cart.lines().length === 0" class="cart-empty">
     Your cart is empty. <a routerLink="/home">Browse products</a>.
@@ -12,18 +14,30 @@
   <ng-container *ngIf="cart.lines().length > 0">
     <ul class="cart-lines">
       <li *ngFor="let line of cart.lines()" class="cart-line">
-        <span class="cart-line-name">{{ line.product.name }}</span>
-        <span class="cart-line-qty">× {{ line.quantity }}</span>
-        <span class="cart-line-total">{{ line.product.price * line.quantity | number: '1.2-2' }}</span>
+        <span class="cart-line-name">{{ line.name }}</span>
+        <span class="cart-line-price">{{ line.unitPrice | number: '1.2-2' }}</span>
+
+        <div class="cart-stepper">
+          <button type="button" aria-label="Decrease quantity" (click)="cart.setLineQuantity(line, line.quantity - 1)">
+            −
+          </button>
+          <span class="cart-line-qty">{{ line.quantity }}</span>
+          <button type="button" aria-label="Increase quantity" (click)="cart.setLineQuantity(line, line.quantity + 1)">
+            +
+          </button>
+        </div>
+
+        <span class="cart-line-total">{{ line.unitPrice * line.quantity | number: '1.2-2' }}</span>
+        <button type="button" class="cart-remove" (click)="cart.setLineQuantity(line, 0)">Remove</button>
       </li>
     </ul>
 
     <div class="cart-footer">
-      <strong>Total: {{ cart.total() | number: '1.2-2' }}</strong>
-      <button type="button" class="cart-clear" (click)="cart.clear()">Clear cart</button>
-      <a routerLink="/cart/checkout" class="cart-checkout">Checkout</a>
+      <strong class="cart-total">Total: {{ cart.total() | number: '1.2-2' }}</strong>
+      <div class="cart-actions">
+        <button type="button" class="cart-clear" (click)="cart.clear()">Clear cart</button>
+        <a routerLink="/checkout" class="cart-checkout">Checkout</a>
+      </div>
     </div>
   </ng-container>
-
-  <router-outlet />
 </main>

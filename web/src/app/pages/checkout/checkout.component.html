@@ -1,16 +1,53 @@
-<section class="checkout">
-  <h2>Checkout</h2>
+<app-header />
 
-  <p *ngIf="cart.itemCount() === 0" class="checkout-empty">
-    Your cart is empty. <a routerLink="/home">Browse products</a>.
-  </p>
+<main class="checkout-page">
+  <h1>Checkout</h1>
 
-  <ng-container *ngIf="cart.itemCount() > 0">
-    <p class="checkout-summary">
-      {{ cart.itemCount() }} {{ cart.itemCount() === 1 ? 'item' : 'items' }} ·
-      <strong>Total: {{ cart.total() | number: '1.2-2' }}</strong>
+  <section *ngIf="placedOrder() as order" class="checkout-result" role="status">
+    <h2 class="checkout-success">Thank you, your order is placed</h2>
+    <p class="checkout-order-id">Order {{ order.id }}</p>
+
+    <ul class="checkout-lines">
+      <li *ngFor="let line of order.lines" class="checkout-line">
+        <span class="checkout-line-name">{{ line.productName }}</span>
+        <span class="checkout-line-qty">× {{ line.quantity }}</span>
+        <span class="checkout-line-total">{{ line.unitPrice * line.quantity | number: '1.2-2' }}</span>
+      </li>
+    </ul>
+
+    <p class="checkout-total"><strong>Total: {{ order.total | number: '1.2-2' }}</strong></p>
+    <a routerLink="/home" class="checkout-back">Keep shopping</a>
+  </section>
+
+  <ng-container *ngIf="!placedOrder()">
+    <p *ngIf="cart.lines().length === 0" class="checkout-empty">
+      Your cart is empty. <a routerLink="/home">Browse products</a>.
     </p>
-  </ng-container>
 
-  <a routerLink="/cart" class="checkout-back">Back to cart</a>
-</section>
+    <ng-container *ngIf="cart.lines().length > 0">
+      <h2 class="checkout-heading">Order summary</h2>
+
+      <ul class="checkout-lines">
+        <li *ngFor="let line of cart.lines()" class="checkout-line">
+          <span class="checkout-line-name">{{ line.name }}</span>
+          <span class="checkout-line-qty">× {{ line.quantity }}</span>
+          <span class="checkout-line-total">{{ line.unitPrice * line.quantity | number: '1.2-2' }}</span>
+        </li>
+      </ul>
+
+      <p class="checkout-total">
+        {{ cart.itemCount() }} {{ cart.itemCount() === 1 ? 'item' : 'items' }} ·
+        <strong>Total: {{ cart.total() | number: '1.2-2' }}</strong>
+      </p>
+
+      <p *ngIf="error() as message" class="checkout-error" role="alert">{{ message }}</p>
+
+      <div class="checkout-actions">
+        <a routerLink="/cart" class="checkout-back">Edit cart</a>
+        <button type="button" class="checkout-place" [disabled]="placing()" (click)="placeOrder()">
+          {{ placing() ? 'Placing order...' : 'Place order' }}
+        </button>
+      </div>
+    </ng-container>
+  </ng-container>
+</main>

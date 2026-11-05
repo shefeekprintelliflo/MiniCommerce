@@ -4,6 +4,7 @@ using Microservice.Products.Endpoints;
 using Microservice.Products.Models;
 using Microservice.Products.Options;
 using Microservice.Products.Repositories;
+using Microservice.Products.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -17,6 +18,7 @@ builder.Services.AddDbContext<ProductsDb>(options =>
 
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<StockReservationService>();
 
 // Binds Jwt:* and fails at startup if any required value is missing.
 builder.Services.AddOptions<JwtOptions>()
@@ -61,8 +63,16 @@ app.UseAuthorization();
 
 app.MapAdminProductEndpoints();
 app.MapProductEndpoints();
+app.MapReservationEndpoints();
 app.MapHealthChecks("/health/ready");
 app.MapGet("/health/live", () => Results.Ok(new { status = "alive" }));
+
+// Creates the database and applies pending migrations. Turned on by docker-compose; off for local runs.
+if (app.Configuration.GetValue<bool>("Database:MigrateOnStartup"))
+{
+    using var scope = app.Services.CreateScope();
+    await scope.ServiceProvider.GetRequiredService<ProductsDb>().Database.MigrateAsync();
+}
 
 app.Run();
 
