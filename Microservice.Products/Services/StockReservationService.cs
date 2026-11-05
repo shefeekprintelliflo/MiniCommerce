@@ -60,13 +60,20 @@ public class StockReservationService(ProductsDb db)
                 return (null, $"Not enough stock for \"{product.Name}\".");
             }
 
+            // Read inside the same transaction, after the decrement, so it is the stock this hold left behind.
+            var remaining = await db.Products.AsNoTracking()
+                .Where(p => p.Id == item.ProductId)
+                .Select(p => p.StockQuantity)
+                .FirstAsync(cancellationToken);
+
             reservation.Lines.Add(new ReservationLine
             {
                 ReservationId = reservation.Id,
                 ProductId = product.Id,
                 ProductName = product.Name,
                 UnitPrice = product.Price,
-                Quantity = item.Quantity
+                Quantity = item.Quantity,
+                RemainingStock = remaining
             });
         }
 

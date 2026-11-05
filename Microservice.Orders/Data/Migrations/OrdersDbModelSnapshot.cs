@@ -35,6 +35,14 @@ namespace Microservice.Orders.Data.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
+                    b.Property<string>("PaymentMethod")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("PaymentReference")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(20)

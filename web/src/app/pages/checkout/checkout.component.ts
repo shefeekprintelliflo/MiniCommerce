@@ -3,7 +3,7 @@ import { DecimalPipe, NgFor, NgIf } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CartService } from '../../core/cart/cart.service';
-import { OrderResponse } from '../../core/orders/orders.models';
+import { OrderResponse, PaymentMethod, paymentMethodLabels } from '../../core/orders/orders.models';
 import { OrdersService } from '../../core/orders/orders.service';
 import { HeaderComponent } from '../../shared/header/header.component';
 
@@ -21,12 +21,14 @@ export class CheckoutComponent {
   protected readonly placing = signal(false);
   protected readonly placedOrder = signal<OrderResponse | null>(null);
   protected readonly error = signal<string | null>(null);
+  protected readonly paymentMethods = Object.entries(paymentMethodLabels) as [PaymentMethod, string][];
+  protected readonly paymentMethod = signal<PaymentMethod>('card');
 
   protected placeOrder(): void {
     this.placing.set(true);
     this.error.set(null);
 
-    this.orders.placeOrder().subscribe({
+    this.orders.placeOrder(this.paymentMethod()).subscribe({
       next: (order) => {
         this.placing.set(false);
         this.placedOrder.set(order);

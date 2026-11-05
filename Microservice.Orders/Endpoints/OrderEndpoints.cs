@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microservice.Orders.Data;
 using Microservice.Orders.Models;
+using Microservice.Orders.Payments;
 using Microservice.Orders.Sagas;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,10 +15,22 @@ public static class OrderEndpoints
         var group = app.MapGroup("/api/orders")
             .RequireAuthorization();
 
-        group.MapPost("/", async Task<IResult> (HttpContext http, CheckoutSaga saga, ClaimsPrincipal user, CancellationToken cancellationToken) =>
+        group.MapPost("/", async Task<IResult> (
+            HttpContext http, CheckoutRequest? request, CheckoutSaga saga, IPaymentStrategyFactory payments,
+            ClaimsPrincipal user, CancellationToken cancellationToken) =>
         {
+            var payment = payments.Create(request?.PaymentMethod ?? string.Empty);
+            if (payment is null)
+            {
+                return Results.ValidationProblem(new Dictionary<string, string[]>
+                {
+                    ["paymentMethod"] = ["Choose a supported payment method."]
+                });
+            }
+
             var authorization = http.Request.Headers.Authorization.ToString();
-            var result = await saga.PlaceOrderAsync(CurrentUser.Id(user), authorization, cancellationToken);
+            var email = user.FindFirstValue(ClaimTypes.Email) ?? string.Empty;
+            var result = await saga.PlaceOrderAsync(CurrentUser.Id(user), email, authorization, payment, cancellationToken);
 
             if (result.Succeeded)
             {

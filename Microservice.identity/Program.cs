@@ -87,6 +87,7 @@ app.UseAuthorization();
 
 app.MapAuthEndpoints();
 app.MapAdminEndpoints();
+
 app.MapHealthChecks("/health/ready");
 app.MapGet("/health/live", () => Results.Ok(new { status = "alive" }));
 

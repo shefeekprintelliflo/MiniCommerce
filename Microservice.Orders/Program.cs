@@ -2,7 +2,10 @@ using System.Text;
 using Microservice.Orders.Clients;
 using Microservice.Orders.Data;
 using Microservice.Orders.Endpoints;
+using Microservice.Orders.Events;
+using Microservice.Orders.Notifications;
 using Microservice.Orders.Options;
+using Microservice.Orders.Payments;
 using Microservice.Orders.Sagas;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -24,6 +27,19 @@ var productsBaseUrl = builder.Configuration["Services:Products"]
 builder.Services.AddHttpClient<CartClient>(client => client.BaseAddress = new Uri(cartBaseUrl));
 builder.Services.AddHttpClient<ProductsClient>(client => client.BaseAddress = new Uri(productsBaseUrl));
 builder.Services.AddScoped<CheckoutSaga>();
+
+// Observers of OrderPlaced. OrderEvents calls every registered IOrderPlacedObserver. Add a reaction by registering another one here.
+builder.Services.AddScoped<OrderEvents>();
+builder.Services.AddScoped<IOrderPlacedObserver, ClearCartObserver>();
+builder.Services.AddScoped<IOrderPlacedObserver, ConfirmationEmailObserver>();
+builder.Services.AddScoped<IOrderPlacedObserver, LowStockObserver>();
+builder.Services.AddSingleton<IEmailSender, LoggingEmailSender>();
+
+// Each payment method is a strategy. The factory picks one by name. Add a new method by registering another strategy here.
+builder.Services.AddSingleton<IPaymentStrategy, CardPaymentStrategy>();
+builder.Services.AddSingleton<IPaymentStrategy, PayPalPaymentStrategy>();
+builder.Services.AddSingleton<IPaymentStrategy, CashOnDeliveryPaymentStrategy>();
+builder.Services.AddSingleton<IPaymentStrategyFactory, PaymentStrategyFactory>();
 
 // Binds Jwt:* and fails at startup if any required value is missing.
 builder.Services.AddOptions<JwtOptions>()

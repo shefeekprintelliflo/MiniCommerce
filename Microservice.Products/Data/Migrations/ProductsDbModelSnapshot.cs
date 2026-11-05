@@ -98,6 +98,9 @@ namespace Microservice.Products.Data.Migrations
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
 
+                    b.Property<int>("RemainingStock")
+                        .HasColumnType("int");
+
                     b.Property<decimal>("UnitPrice")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");

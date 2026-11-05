@@ -40,7 +40,7 @@ public class TokenService(IOptions<JwtOptions> jwtOptions, IRefreshTokenReposito
 
     // Lookups compare hashes, so the raw token is never stored and a database leak does not expose live tokens.
     public static string HashRefreshToken(string rawToken) =>
-        Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(rawToken)));
+        Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(rawToken)));  
 
     private string CreateAccessToken(AppUser user, IEnumerable<string> roles, DateTime expires)
     {

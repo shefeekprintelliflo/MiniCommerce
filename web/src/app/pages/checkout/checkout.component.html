@@ -40,6 +40,20 @@
         <strong>Total: {{ cart.total() | number: '1.2-2' }}</strong>
       </p>
 
+      <fieldset class="checkout-payment">
+        <legend>Payment method</legend>
+        <label *ngFor="let option of paymentMethods" class="checkout-payment-option">
+          <input
+            type="radio"
+            name="paymentMethod"
+            [value]="option[0]"
+            [checked]="paymentMethod() === option[0]"
+            (change)="paymentMethod.set(option[0])"
+          />
+          {{ option[1] }}
+        </label>
+      </fieldset>
+
       <p *ngIf="error() as message" class="checkout-error" role="alert">{{ message }}</p>
 
       <div class="checkout-actions">

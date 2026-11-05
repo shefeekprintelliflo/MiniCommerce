@@ -16,6 +16,8 @@ public class OrdersDb(DbContextOptions<OrdersDb> options) : DbContext(options)
             entity.HasKey(o => o.Id);
             entity.Property(o => o.Status).HasConversion<string>().HasMaxLength(20);
             entity.Property(o => o.Total).HasPrecision(18, 2);
+            entity.Property(o => o.PaymentMethod).HasMaxLength(20);
+            entity.Property(o => o.PaymentReference).HasMaxLength(100);
             entity.Property(o => o.FailureReason).HasMaxLength(500);
             entity.HasIndex(o => new { o.UserId, o.CreatedAtUtc });
             entity.HasMany(o => o.Lines)

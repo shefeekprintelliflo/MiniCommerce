@@ -6,6 +6,9 @@ public class Order
     public Guid UserId { get; set; }
     public OrderStatus Status { get; set; } = OrderStatus.Pending;
     public decimal Total { get; set; }
+    public string? PaymentMethod { get; set; }
+    // Returned by the payment strategy when the charge succeeds. Needed to refund it.
+    public string? PaymentReference { get; set; }
     public string? FailureReason { get; set; }
     public DateTime CreatedAtUtc { get; set; }
     public DateTime UpdatedAtUtc { get; set; }

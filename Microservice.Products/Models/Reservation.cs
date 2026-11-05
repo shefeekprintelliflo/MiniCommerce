@@ -19,6 +19,9 @@ public class ReservationLine
     public string ProductName { get; set; } = string.Empty;
     public decimal UnitPrice { get; set; }
     public int Quantity { get; set; }
+
+    // Stock left for this product right after this hold. Lets Orders spot low stock without another call.
+    public int RemainingStock { get; set; }
 }
 
 public enum ReservationStatus

@@ -5,7 +5,7 @@ namespace Microservice.Orders.Clients;
 
 public record ReservationRequestItem(Guid ProductId, int Quantity);
 
-public record ReservedLine(Guid ProductId, string ProductName, decimal UnitPrice, int Quantity);
+public record ReservedLine(Guid ProductId, string ProductName, decimal UnitPrice, int Quantity, int RemainingStock);
 
 public record ReservationResult(Guid ReservationId, IReadOnlyList<ReservedLine> Lines);
 

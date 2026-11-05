@@ -5,13 +5,13 @@ public record CreateReservationRequest(Guid ReservationId, List<ReservationItem>
 
 public record ReservationItem(Guid ProductId, int Quantity);
 
-public record ReservedLine(Guid ProductId, string ProductName, decimal UnitPrice, int Quantity);
+public record ReservedLine(Guid ProductId, string ProductName, decimal UnitPrice, int Quantity, int RemainingStock);
 
 public record ReservationResponse(Guid ReservationId, IReadOnlyList<ReservedLine> Lines)
 {
     public static ReservationResponse From(Reservation reservation) =>
         new(reservation.Id, reservation.Lines
-            .Select(line => new ReservedLine(line.ProductId, line.ProductName, line.UnitPrice, line.Quantity))
+            .Select(line => new ReservedLine(line.ProductId, line.ProductName, line.UnitPrice, line.Quantity, line.RemainingStock))
             .ToList());
 }
 
