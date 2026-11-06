@@ -1,8 +1,11 @@
 using System.Text;
+using Azure.Identity;
+using Azure.Messaging.ServiceBus;
 using Microservice.Orders.Clients;
 using Microservice.Orders.Data;
 using Microservice.Orders.Endpoints;
 using Microservice.Orders.Events;
+using Microservice.Orders.Messaging;
 using Microservice.Orders.Notifications;
 using Microservice.Orders.Options;
 using Microservice.Orders.Payments;
@@ -34,6 +37,15 @@ builder.Services.AddScoped<IOrderPlacedObserver, ClearCartObserver>();
 builder.Services.AddScoped<IOrderPlacedObserver, ConfirmationEmailObserver>();
 builder.Services.AddScoped<IOrderPlacedObserver, LowStockObserver>();
 builder.Services.AddSingleton<IEmailSender, LoggingEmailSender>();
+
+// Outbox messages are sent to Azure Service Bus by a background worker. It signs in with DefaultAzureCredential:
+// your az login locally, or the app's managed identity in Azure. No connection string or key is stored in config.
+var serviceBusNamespace = builder.Configuration["Messaging:Namespace"];
+if (!string.IsNullOrWhiteSpace(serviceBusNamespace))
+{
+    builder.Services.AddSingleton(_ => new ServiceBusClient(serviceBusNamespace, new DefaultAzureCredential()));
+    builder.Services.AddHostedService<ServiceBusOutboxPublisher>();
+}
 
 // Each payment method is a strategy. The factory picks one by name. Add a new method by registering another strategy here.
 builder.Services.AddSingleton<IPaymentStrategy, CardPaymentStrategy>();

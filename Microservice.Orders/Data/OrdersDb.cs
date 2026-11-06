@@ -1,4 +1,5 @@
 using Microservice.Orders.Models;
+using Microservice.Orders.Outbox;
 using Microsoft.EntityFrameworkCore;
 
 namespace Microservice.Orders.Data;
@@ -6,6 +7,8 @@ namespace Microservice.Orders.Data;
 public class OrdersDb(DbContextOptions<OrdersDb> options) : DbContext(options)
 {
     public DbSet<Order> Orders => Set<Order>();
+
+    public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -24,6 +27,17 @@ public class OrdersDb(DbContextOptions<OrdersDb> options) : DbContext(options)
                 .WithOne(l => l.Order)
                 .HasForeignKey(l => l.OrderId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<OutboxMessage>(entity =>
+        {
+            entity.HasKey(m => m.Id);
+            entity.Property(m => m.Type).IsRequired().HasMaxLength(100);
+            entity.Property(m => m.AggregateId).IsRequired().HasMaxLength(100);
+            entity.Property(m => m.Payload).IsRequired();
+            entity.Property(m => m.LastError).HasMaxLength(500);
+            // The publisher scans for unsent rows in order, so this index keeps that scan cheap.
+            entity.HasIndex(m => new { m.PublishedAtUtc, m.CreatedAtUtc });
         });
 
         builder.Entity<OrderLine>(entity =>

@@ -2,6 +2,7 @@ using Microservice.Orders.Clients;
 using Microservice.Orders.Data;
 using Microservice.Orders.Events;
 using Microservice.Orders.Models;
+using Microservice.Orders.Outbox;
 using Microservice.Orders.Payments;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,7 +15,7 @@ public record CheckoutResult(bool Succeeded, OrderResponse? Order, string? Error
 //   2. Save the order as Pending.
 //   3. Charge the shopper with the chosen payment strategy.
 //   4. Reserve stock in Microservice.Products (the order id is the reservation id).
-//   5. Check the reserved prices match the amount charged, then save the order as Placed.
+//   5. Check the reserved prices match the amount charged, then save the order as Placed and its order.placed message in one save.
 //   6. Publish OrderPlaced. Observers (such as clearing the cart) react to it.
 // If a step after the charge fails, the charge is refunded, the reservation is released if one was made, and the order is marked Cancelled.
 // The order row is saved as Pending before the charge, so a crash leaves a visible trail.
@@ -108,6 +109,10 @@ public class CheckoutSaga(
             return new CheckoutResult(false, OrderResponse.From(order), "Prices changed during checkout. Please review your cart and try again.");
         }
 
+        var placedLines = reservation.Lines
+            .Select(line => new PlacedLine(line.ProductId, line.ProductName, line.UnitPrice, line.Quantity, line.RemainingStock))
+            .ToList();
+
         try
         {
             order.Lines = reservation.Lines
@@ -123,6 +128,13 @@ public class CheckoutSaga(
             order.Total = reservedTotal;
             order.Status = OrderStatus.Placed;
             order.UpdatedAtUtc = DateTime.UtcNow;
+
+            // Added to the same unit of work as the order, so both are saved together or not at all.
+            db.OutboxMessages.Add(OutboxMessage.For(
+                OutboxMessage.OrderPlacedType,
+                order.Id.ToString(),
+                new OrderPlacedMessage(order.Id, userId, email, reservedTotal, placedLines)));
+
             await db.SaveChangesAsync(cancellationToken);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
@@ -134,10 +146,6 @@ public class CheckoutSaga(
         }
 
         // The order is saved, so nothing below can cancel it. Observers run after this point and their failures are only logged.
-        var placedLines = reservation.Lines
-            .Select(line => new PlacedLine(line.ProductId, line.ProductName, line.UnitPrice, line.Quantity, line.RemainingStock))
-            .ToList();
-
         await events.PublishOrderPlacedAsync(
             new OrderPlaced(order.Id, userId, email, order.Total, placedLines, authorization), CancellationToken.None);
 

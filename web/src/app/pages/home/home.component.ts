@@ -1,9 +1,11 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { NgFor, NgIf } from '@angular/common';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { CartService } from '../../core/cart/cart.service';
+import { ProductFilterStore } from '../../core/products/product-filter.store';
 import { ProductResponse } from '../../core/products/products.models';
 import { ProductsService } from '../../core/products/products.service';
 import { CartSummaryComponent } from '../../shared/cart-summary/cart-summary.component';
@@ -21,14 +23,16 @@ export class HomeComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly products = inject(ProductsService);
   protected readonly cart = inject(CartService);
+  private readonly filterStore = inject(ProductFilterStore);
+  private readonly destroyRef = inject(DestroyRef);
 
   protected readonly signedIn = this.auth.signedIn;
   protected readonly loading = signal(false);
   protected readonly items = signal<ProductResponse[]>([]);
   protected readonly error = signal<string | null>(null);
 
-  // Filter state lives here. The filter bar only displays it and reports changes.
-  protected readonly filters = signal<ProductFilters>({ search: '', inStockOnly: false, outOfStockOnly: false });
+  // Mirrors the store so the template can read it synchronously. The store keeps the filters across navigation.
+  protected readonly filters = signal<ProductFilters>(this.filterStore.current);
 
   protected readonly visibleItems = computed(() => {
     const { search, inStockOnly, outOfStockOnly } = this.filters();
@@ -45,6 +49,11 @@ export class HomeComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    // Keep the local signal in step with the store. The store is the source of truth.
+    this.filterStore.filters$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((filters) => this.filters.set(filters));
+
     // The products API requires a signed-in user, so only load the list when there is a token.
     if (this.signedIn()) {
       this.load();
@@ -52,7 +61,7 @@ export class HomeComponent implements OnInit {
   }
 
   protected onFiltersChange(filters: ProductFilters): void {
-    this.filters.set(filters);
+    this.filterStore.set(filters);
   }
 
   protected onAddToCart({ product, quantity }: { product: ProductResponse; quantity: number }): void {
