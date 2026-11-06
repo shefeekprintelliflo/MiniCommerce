@@ -69,9 +69,6 @@ public class ServiceBusOutboxPublisher(
                     // Duplicate detection on the queue drops a resend with the same MessageId within its window.
                     MessageId = message.Id.ToString(),
 
-                    // Sessions keep messages for one order in order. The queue must have sessions enabled.
-                    SessionId = message.AggregateId,
-
                     Subject = message.Type,
                     ContentType = "application/json"
                 }, cancellationToken);

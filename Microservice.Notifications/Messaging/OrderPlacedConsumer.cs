@@ -6,8 +6,7 @@ using Microservice.Notifications.Sending;
 
 namespace Microservice.Notifications.Messaging;
 
-// Receives order.placed messages from the order-events queue and sends the shopper a confirmation email.
-// Uses sessions, matching the publisher: messages for one order are handled in order.
+// Receives order.placed messages from the mini-commerce queue and sends the shopper a confirmation email.
 // Delivery is at-least-once, so a redelivered message can send the same email twice.
 // The message is completed only after the email call succeeds. If it fails, the message is abandoned and retried by Service Bus.
 public class OrderPlacedConsumer(
@@ -17,7 +16,7 @@ public class OrderPlacedConsumer(
     ILogger<OrderPlacedConsumer> logger) : BackgroundService
 {
     private const string OrderPlacedSubject = "order.placed";
-    private ServiceBusSessionProcessor? processor;
+    private ServiceBusProcessor? processor;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -28,11 +27,10 @@ public class OrderPlacedConsumer(
             return;
         }
 
-        processor = client.CreateSessionProcessor(queueName, new ServiceBusSessionProcessorOptions
+        processor = client.CreateProcessor(queueName, new ServiceBusProcessorOptions
         {
             AutoCompleteMessages = false,
-            MaxConcurrentSessions = 4,
-            MaxConcurrentCallsPerSession = 1
+            MaxConcurrentCalls = 1
         });
 
         processor.ProcessMessageAsync += HandleMessageAsync;
@@ -55,7 +53,7 @@ public class OrderPlacedConsumer(
         }
     }
 
-    private async Task HandleMessageAsync(ProcessSessionMessageEventArgs args)
+    private async Task HandleMessageAsync(ProcessMessageEventArgs args)
     {
         var message = args.Message;
 
