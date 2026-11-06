@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Microservice.Orders.Messaging;
 
-// Background worker. Reads unpublished outbox rows and sends them to the Service Bus topic in Messaging:TopicName.
+// Background worker. Reads unpublished outbox rows and sends them to the Service Bus queue in Messaging:QueueName.
 // Delivery is at-least-once: a message can be sent twice if the service stops between sending and saving.
 // Consumers must therefore handle a repeated message safely.
 public class ServiceBusOutboxPublisher(
@@ -22,15 +22,15 @@ public class ServiceBusOutboxPublisher(
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var topicName = configuration["Messaging:TopicName"];
-        if (string.IsNullOrWhiteSpace(topicName))
+        var queueName = configuration["Messaging:QueueName"];
+        if (string.IsNullOrWhiteSpace(queueName))
         {
-            // Without a topic, messages stay in the outbox until one is configured. Checkout still works.
-            logger.LogWarning("Messaging:TopicName is not set. Outbox messages will not be published.");
+            // Without a queue, messages stay in the outbox until one is configured. Checkout still works.
+            logger.LogWarning("Messaging:QueueName is not set. Outbox messages will not be published.");
             return;
         }
 
-        sender = client.CreateSender(topicName);
+        sender = client.CreateSender(queueName);
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -66,10 +66,10 @@ public class ServiceBusOutboxPublisher(
             {
                 await sender!.SendMessageAsync(new ServiceBusMessage(message.Payload)
                 {
-                    // Duplicate detection on the topic drops a resend with the same MessageId within its window.
+                    // Duplicate detection on the queue drops a resend with the same MessageId within its window.
                     MessageId = message.Id.ToString(),
 
-                    // Sessions keep messages for one order in order. The subscription must have sessions enabled.
+                    // Sessions keep messages for one order in order. The queue must have sessions enabled.
                     SessionId = message.AggregateId,
 
                     Subject = message.Type,

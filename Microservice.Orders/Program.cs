@@ -38,10 +38,17 @@ builder.Services.AddScoped<IOrderPlacedObserver, ConfirmationEmailObserver>();
 builder.Services.AddScoped<IOrderPlacedObserver, LowStockObserver>();
 builder.Services.AddSingleton<IEmailSender, LoggingEmailSender>();
 
-// Outbox messages are sent to Azure Service Bus by a background worker. It signs in with DefaultAzureCredential:
-// your az login locally, or the app's managed identity in Azure. No connection string or key is stored in config.
+// Outbox messages are sent to Azure Service Bus by a background worker.
+// Messaging:ConnectionString (a user secret locally) is used when set. Otherwise the publisher signs in with
+// DefaultAzureCredential: your az login locally, or the app's managed identity in Azure.
+var serviceBusConnection = builder.Configuration["Messaging:ConnectionString"];
 var serviceBusNamespace = builder.Configuration["Messaging:Namespace"];
-if (!string.IsNullOrWhiteSpace(serviceBusNamespace))
+if (!string.IsNullOrWhiteSpace(serviceBusConnection))
+{
+    builder.Services.AddSingleton(_ => new ServiceBusClient(serviceBusConnection));
+    builder.Services.AddHostedService<ServiceBusOutboxPublisher>();
+}
+else if (!string.IsNullOrWhiteSpace(serviceBusNamespace))
 {
     builder.Services.AddSingleton(_ => new ServiceBusClient(serviceBusNamespace, new DefaultAzureCredential()));
     builder.Services.AddHostedService<ServiceBusOutboxPublisher>();

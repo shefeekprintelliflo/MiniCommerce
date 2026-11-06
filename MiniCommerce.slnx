@@ -2,5 +2,6 @@
   <Project Path="Microservice.identity/Microservice.identity.csproj" />
   <Project Path="Microservice.Products/Microservice.Products.csproj" />
   <Project Path="Microservice.Cart/Microservice.Cart.csproj" />
+  <Project Path="Microservice.Notifications/Microservice.Notifications.csproj" />
   <Project Path="Microservice.Orders/Microservice.Orders.csproj" />
 </Solution>
