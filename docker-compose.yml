@@ -25,6 +25,8 @@ services:
       ASPNETCORE_ENVIRONMENT: Production
       Database__MigrateOnStartup: "true"
       ConnectionStrings__IdentityDb: "Server=sqlserver,1433;Database=MiniCommerce.Identity;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
+      Jwt__Issuer: microservice.identity
+      Jwt__Audience: commerce-api
       Jwt__SigningKey: ${JWT_SIGNING_KEY:?Set JWT_SIGNING_KEY in .env}
       Roles__BootstrapAdminEmail: ${BOOTSTRAP_ADMIN_EMAIL:-}
     depends_on:

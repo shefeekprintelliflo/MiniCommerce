@@ -14,7 +14,7 @@ using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Loads secrets (such as ConnectionStrings--IdentityDb) from Azure Key Vault when KeyVault:Uri is set.
+// Loads secrets (such as ConnectionStrings--IdentityDb and Jwt--SigningKey) from Azure Key Vault when KeyVault:Uri is set.
 // Locally, DefaultAzureCredential uses your Azure CLI or Visual Studio login.
 // In Azure, it uses the app's managed identity. Leave KeyVault:Uri empty to skip Key Vault.
 var keyVaultUri = builder.Configuration["KeyVault:Uri"];
@@ -44,7 +44,8 @@ builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 builder.Services.AddScoped<RoleSeeder>();
 builder.Services.AddSingleton<PasswordPolicy>();
 
-// Binds Jwt:* to JwtOptions and fails at startup if any required value is missing.
+// Binds Jwt:* (Issuer, Audience, SigningKey) to JwtOptions. Values come from Key Vault (Jwt--Issuer, Jwt--Audience, Jwt--SigningKey)
+// and the app fails at startup if any of them is missing.
 builder.Services.AddOptions<JwtOptions>()
     .BindConfiguration(JwtOptions.SectionName)
     .ValidateDataAnnotations()

@@ -14,6 +14,11 @@
     "secure": false,
     "changeOrigin": true
   },
+  "/api/files": {
+    "target": "http://localhost:7071",
+    "secure": false,
+    "changeOrigin": true
+  },
   "/api": {
     "target": "http://localhost:60071",
     "secure": false,

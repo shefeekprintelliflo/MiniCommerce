@@ -10,3 +10,6 @@ secrets.json
 
 # Local Docker settings with passwords and keys
 .env
+
+# Azure Functions local settings can hold connection strings
+Microservice.Functions/local.settings.json

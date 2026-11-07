@@ -32,6 +32,11 @@ export const routes: Routes = [
     canMatch: [authGuard],
   },
   {
+    path: 'upload',
+    loadComponent: () => import('./pages/upload/upload.component').then((m) => m.UploadComponent),
+    canMatch: [authGuard],
+  },
+  {
     path: 'register',
     loadComponent: () => import('./pages/register/register.component').then((m) => m.RegisterComponent),
   },

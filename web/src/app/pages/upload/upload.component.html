@@ -1,0 +1,48 @@
+<app-header />
+
+<main class="upload-page">
+  <h1>Upload a file</h1>
+
+  <section class="upload-box">
+    <label class="upload-label" for="file-input">Choose a file</label>
+    <input
+      id="file-input"
+      type="file"
+      [accept]="accept"
+      [disabled]="uploading()"
+      (change)="onFileChosen($event)"
+    />
+    <p class="upload-hint">Allowed: {{ allowedLabel }}. Maximum {{ maxMegabytes }} MB.</p>
+
+    @if (selected(); as file) {
+      <p class="upload-selected">
+        {{ file.name }} · {{ file.size | number: '1.0-0' }} bytes
+      </p>
+    }
+
+    @if (error(); as message) {
+      <p class="upload-error" role="alert">{{ message }}</p>
+    }
+
+    <button
+      type="button"
+      class="upload-submit"
+      [disabled]="!selected() || uploading()"
+      (click)="upload()"
+    >
+      {{ uploading() ? 'Uploading...' : 'Upload' }}
+    </button>
+  </section>
+
+  @if (uploaded(); as result) {
+    <section class="upload-result" role="status">
+      <h2>Upload complete</h2>
+      <p>Stored as <strong>{{ result.name }}</strong> ({{ result.size | number: '1.0-0' }} bytes).</p>
+      @if (result.url) {
+        <p class="upload-url">{{ result.url }}</p>
+      }
+    </section>
+  }
+
+  <a routerLink="/home" class="upload-back">Back to products</a>
+</main>
